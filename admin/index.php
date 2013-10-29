@@ -8,6 +8,7 @@ if($_SESSION['username']!=null || $_SESSION['username']!=''){
 <html>
 <head>
     <title>Computer-Based Test</title>
+    <link rel="shortcut icon" href="../bootstrap/img/komputer.ico"/>
     <link href="../bootstrap/css/validationEngine.jquery.css" rel="stylesheet" type="text/css">
     <link href="../bootstrap/css/style.css" rel="stylesheet" type="text/css">
     <!--<link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet" type="text/css">-->

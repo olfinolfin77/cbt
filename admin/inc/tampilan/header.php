@@ -49,10 +49,10 @@
                       <span class="caret"></span>
                   </button>
                   <ul class="dropdown-menu">
-                      <li><a href="logout.php"><i class="icon-off"></i>Log Out</a></li>
+                      <li><a href="logout.php"><i class="icon-off"></i> Log Out</a></li>
                       <li>
                           <a href="<?php echo getUrlForAjax();?>" onclick="return changePassword();">
-                              <i class="icon-off"></i>Change Password
+                              <i class="icon-pencil"></i> Change Password
                           </a>
                       </li>
                   </ul>

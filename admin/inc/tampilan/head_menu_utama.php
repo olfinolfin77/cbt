@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
+    <link rel="shortcut icon" href="<?php echo BASE_URL2;?>/bootstrap/img/komputer.ico"/>
 
     <!--style editor
     <link href="../bootstrap/css/bootstrap-wysihtml5.css" rel="stylesheet" type="text/css">

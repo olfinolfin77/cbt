@@ -31,6 +31,7 @@ if(mysql_num_rows($result)){
 <html>
 <head>
     <title>Computer Based Test</title>
+    <link rel="shortcut icon" href="../bootstrap/img/komputer.ico"/>
     <link href="../bootstrap/css/validationEngine.jquery.css" rel="stylesheet" type="text/css">
     <link href="../bootstrap/css/style.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="../bootstrap/js/jquery.js"></script>

@@ -5,6 +5,23 @@
             new nicEditor({uploadURI:"<?php echo BASE_URL.'/services/nicUpload.php';?>",maxHeight : 100,iconsPath: "<?php echo base_url().'bootstrap/img/nicEditorIcons.gif';?>"}).panelInstance('isi_soal');
         })
     });
+    /**
+    * @name htmlClean
+    * @description remove whitespace from html
+    */
+    jQuery.fn.htmlClean = function() {
+        this.contents().filter(function() {
+            if (this.nodeType != 3) {
+                $(this).htmlClean();
+                return false;
+            }
+            else {
+                this.textContent = $.trim(this.textContent);
+                return !/\S/.test(this.nodeValue);
+            }
+        }).remove();
+        return this;
+    }
     function tambah(){
         var data = {
             where:"",
@@ -46,14 +63,15 @@
             
             $("#form-tambah").trigger('reset');
             nicEditors.findEditor('isi_soal').setContent('');
+            removeInstanceEditor();
             $("#frm-tambah").removeClass("ubah");
             $("#frm-tambah").dialog({
                 title: "Tambah Soal",
                 resizable: false,
                 position: 'center',
                 modal: true,
-                width: 400,
-                height: "auto",
+                width: 410,
+                height: 500,//height: "auto",
                 hide: 'fold',
                 show: 'bounce'
             });
@@ -127,6 +145,7 @@
                     selected:(kategoris[i].nama_kategori==kategori)?true:false
                 }));
             }
+            removeInstanceEditor();
             if(jawabans!==null){
                 for(var i=0;i<jawabans.length;i++){
                     $("#temp_id_jwb"+(i+1)).val(jawabans[i].id_jawaban);
@@ -144,8 +163,8 @@
                     resizable: false,
                     position: 'center',
                     modal: true,
-                    width: 400,
-                    height: "auto",
+                    width: 410,
+                    height: 500,//height: "auto",
                     hide: 'fold',
                     show: 'bounce'
                 });
@@ -160,12 +179,20 @@
         if($("#frm-tambah").hasClass("ubah")){
             isUbah = true;
         }
+        $nice = nicEditors.findEditor('isi_soal');
+        if($nice.getContent().trim()==''){
+            showInformation("Soal belum diisi", function(){});
+            return false;
+        }
+        if(!jawabanSudahDiisiSemua()){
+            showInformation("Jawaban ada yang belum diisi", function(){});
+            return false;
+        }
         if( !$("#chk1").is(':checked') && !$("#chk2").is(':checked') &&
             !$("#chk3").is(':checked') && !$("#chk4").is(':checked') ){
             showInformation("Pilih salah satu jawaban yang benar", function(){});
             return false;
         }
-        $nice = nicEditors.findEditor('isi_soal');
         var data = {
             id_soal:$("#temp_id_soal").val(),
             id_kategori:$("#kategori_soal").val(),
@@ -174,22 +201,22 @@
             jawaban:[
                 {
                     id_jawaban:$("#temp_id_jwb1").val(),
-                    jawab:$("#jwb1").val(),
+                    jawab:($nic)?nicEditors.findEditor('jwb1').getContent():$("#jwb1").val(),
                     benar:$("#chk1").is(':checked')?1:0
                 },
                 {
                     id_jawaban:$("#temp_id_jwb2").val(),
-                    jawab:$("#jwb2").val(),
+                    jawab:($nic2)?nicEditors.findEditor('jwb2').getContent():$("#jwb2").val(),
                     benar:$("#chk2").is(':checked')?1:0
                 },
                 {
                     id_jawaban:$("#temp_id_jwb3").val(),
-                    jawab:$("#jwb3").val(),
+                    jawab:($nic3)?nicEditors.findEditor('jwb3').getContent():$("#jwb3").val(),
                     benar:$("#chk3").is(':checked')?1:0
                 },
                 {
                     id_jawaban:$("#temp_id_jwb4").val(),
-                    jawab:$("#jwb4").val(),
+                    jawab:($nic4)?nicEditors.findEditor('jwb4').getContent():$("#jwb4").val(),
                     benar:$("#chk4").is(':checked')?1:0
                 }
             ]
@@ -308,6 +335,10 @@
         $("#chk2").attr('disabled','disabled');
         $("#chk3").attr('disabled','disabled');
         $("#chk4").attr('disabled','disabled');
+        $("#ag1").addClass('disabled');
+        $("#ag2").addClass('disabled');
+        $("#ag3").addClass('disabled');
+        $("#ag4").addClass('disabled');
     }
     function enableAllInput(){
         $("#kategori_soal").removeAttr('disabled');
@@ -323,6 +354,10 @@
         $("#chk2").removeAttr('disabled');
         $("#chk3").removeAttr('disabled');
         $("#chk4").removeAttr('disabled');
+        $("#ag1").removeClass('disabled');
+        $("#ag2").removeClass('disabled');
+        $("#ag3").removeClass('disabled');
+        $("#ag4").removeClass('disabled');
     }
     function actionButtonSimpan(){
         if($("#txt-btn-add").html()==' Simpan Data'){
@@ -352,6 +387,88 @@
             $("#chk3").prop('checked',false);
         }
     }
+    $nic=null,$nic2=null,$nic3=null,$nic4=null;
+    function actionTambahGambar(id){
+        var isUbah = false;
+        if($("#frm-tambah").hasClass("ubah")){
+            isUbah = true;
+        }
+        if(id=='ag1'){
+            if($nic!=null){
+//                $('#jwb1').parent().find('br').remove();
+                $nic.removeInstance('jwb1'); $nic=null;
+//                $('#jwb1').parent().children().not('#jwb1').remove();
+                $('#jwb1').parent().htmlClean();
+                return false;
+            }
+            $nic = new nicEditor({uploadURI:"<?php echo BASE_URL.'/services/nicUpload.php';?>",maxHeight : 100,iconsPath: "<?php echo base_url().'bootstrap/img/nicEditorIcons.gif';?>"}).panelInstance('jwb1');
+            if(!isUbah)nicEditors.findEditor('jwb1').setContent('');
+        } else if(id=='ag2'){
+            if($nic2){
+                $nic2.removeInstance('jwb2'); $nic2=null;
+                $('#jwb2').parent().htmlClean();
+                return false;
+            }
+            $nic2 = new nicEditor({uploadURI:"<?php echo BASE_URL.'/services/nicUpload.php';?>",maxHeight : 100,iconsPath: "<?php echo base_url().'bootstrap/img/nicEditorIcons.gif';?>"}).panelInstance('jwb2');
+            if(!isUbah)nicEditors.findEditor('jwb2').setContent('');
+        } else if(id=='ag3'){
+            if($nic3){
+                $nic3.removeInstance('jwb3'); $nic3=null;
+                $('#jwb3').parent().htmlClean();
+                return false;
+            }
+            $nic3 = new nicEditor({uploadURI:"<?php echo BASE_URL.'/services/nicUpload.php';?>",maxHeight : 100,iconsPath: "<?php echo base_url().'bootstrap/img/nicEditorIcons.gif';?>"}).panelInstance('jwb3');
+            if(!isUbah)nicEditors.findEditor('jwb3').setContent('');
+        } else if(id=='ag4'){
+            if($nic4){
+                $nic4.removeInstance('jwb4'); $nic4=null;
+                $('#jwb4').parent().htmlClean();
+                return false;
+            }
+            $nic4 = new nicEditor({uploadURI:"<?php echo BASE_URL.'/services/nicUpload.php';?>",maxHeight : 100,iconsPath: "<?php echo base_url().'bootstrap/img/nicEditorIcons.gif';?>"}).panelInstance('jwb4');
+            if(!isUbah)nicEditors.findEditor('jwb4').setContent('');
+        }
+        return false;
+    }
+    /**
+    * @description Remove nicEditor from textarea
+    */
+    function removeInstanceEditor(){
+       if($nic){
+           nicEditors.findEditor('jwb1').setContent('');
+           $nic.removeInstance('jwb1'); $nic=null;
+       }
+       if($nic2){
+           nicEditors.findEditor('jwb2').setContent('');
+           $nic2.removeInstance('jwb2'); $nic2=null;
+       }
+       if($nic3){
+           nicEditors.findEditor('jwb3').setContent('');
+           $nic3.removeInstance('jwb3'); $nic3=null;
+       }
+       if($nic4){
+           nicEditors.findEditor('jwb4').setContent('');
+           $nic4.removeInstance('jwb4'); $nic4=null;
+       }
+    }
+    /**
+     * @description Cek apakah input jawaban sudah diisi semua
+     */
+    function jawabanSudahDiisiSemua(){
+       if($nic){
+           if(nicEditors.findEditor('jwb1').getContent().trim()=='') return false;
+       }
+       if($nic2){
+           if(nicEditors.findEditor('jwb2').getContent().trim()=='') return false;
+       }
+       if($nic3){
+           if(nicEditors.findEditor('jwb3').getContent().trim()=='') return false;
+       }
+       if($nic4){
+           if(nicEditors.findEditor('jwb4').getContent().trim()=='') return false;
+       }
+       return true;
+    }
 </script>
 <div id="sukses" style="display: none;">
     <center>
@@ -366,7 +483,7 @@
         <input id="temp_id_jwb2" name="temp_id_soal" type="hidden" value=""/>
         <input id="temp_id_jwb3" name="temp_id_soal" type="hidden" value=""/>
         <input id="temp_id_jwb4" name="temp_id_soal" type="hidden" value=""/>
-        <table border="0">
+        <table border="0" >
             <tr>
                 <td>Kategori</td>
                 <td align="right">
@@ -390,15 +507,33 @@
             </tr>
             <tr>
                 <td valign="top">Jawaban</td>
-                <td align="right">
-                    <b>a.</b>&nbsp;<input style="width: 255px;" name="jwb1" id="jwb1" class="validate[required]" type="text"/>
-                    <input id="chk1" type="checkbox" onclick="return actionCheckBox(this.id);"/><br>
-                    <b>b.</b>&nbsp;<input style="width: 255px;" name="jwb2" id="jwb2" class="validate[required]" type="text"/>
-                    <input id="chk2" type="checkbox" onclick="return actionCheckBox(this.id);"/><br>
-                    <b>c.</b>&nbsp;<input style="width: 255px;" name="jwb3" id="jwb3" class="validate[required]" type="text"/>
-                    <input id="chk3" type="checkbox" onclick="return actionCheckBox(this.id);"/><br>
-                    <b>d.</b>&nbsp;<input style="width: 255px;" name="jwb4" id="jwb4" class="validate[required]" type="text"/>
-                    <input id="chk4" type="checkbox" onclick="return actionCheckBox(this.id);"/>
+                <td align="left" style="padding-left: 10px;">
+                    <table border="0" class="my_table">
+                        <tr>
+                            <td><b>a.</b></td>
+                            <td><textarea style="width: 255px; height: 18px;" name="jwb1" id="jwb1" class="validate[required]" type="text"></textarea></td>
+                            <td><a id="ag1" tabindex="-1" href="" title="Tambah Gambar" class="icon icon-plus" onclick="return actionTambahGambar(this.id)"></a></td>
+                            <td><input id="chk1" type="checkbox" onclick="return actionCheckBox(this.id);"/></td>
+                        </tr>
+                        <tr>
+                            <td><b>b.</b></td>
+                            <td><textarea style="width: 255px; height: 18px;" name="jwb2" id="jwb2" class="validate[required]" type="text"></textarea></td>
+                            <td><a id="ag2" tabindex="-1" href="" title="Tambah Gambar" class="icon icon-plus" onclick="return actionTambahGambar(this.id)"></a></td>
+                            <td><input id="chk2" type="checkbox" onclick="return actionCheckBox(this.id);"/></td>
+                        </tr>
+                        <tr>
+                            <td><b>c.</b></td>
+                            <td><textarea style="width: 255px; height: 18px;" name="jwb3" id="jwb3" class="validate[required]" type="text"></textarea></td>
+                            <td><a id="ag3" tabindex="-1" href="" title="Tambah Gambar" class="icon icon-plus" onclick="return actionTambahGambar(this.id)"></a></td>
+                            <td><input id="chk3" type="checkbox" onclick="return actionCheckBox(this.id);"/></td>
+                        </tr>
+                        <tr>
+                            <td><b>d.</b></td>
+                            <td><textarea style="width: 255px; height: 18px;" name="jwb4" id="jwb4" class="validate[required]" type="text"></textarea></td>
+                            <td><a id="ag4" tabindex="-1" href="" title="Tambah Gambar" class="icon icon-plus" onclick="return actionTambahGambar(this.id)"></a></td>
+                            <td><input id="chk4" type="checkbox" onclick="return actionCheckBox(this.id);"/></td>
+                        </tr>
+                    </table><br/>
                 </td>
             </tr>
         </table>

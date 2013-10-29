@@ -17,6 +17,29 @@
     vertical-align: middle;
 }
 
+table.my_table{
+    width: 100%;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+table.my_table td{
+    margin: 0;
+    padding: 2px 0;
+}
+
+table.my_table td textarea{
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-left: 3px;
+}
+
+table.my_table tr{
+    margin: 0;
+    padding: 0;
+}
+
 textarea{
     resize: none;
 }
@@ -112,4 +135,9 @@ body.loading .modal {
 .soal .jawaban li{ cursor: pointer; }
 .soal .jawaban li span{
     margin-left: 6px;
+}
+a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
 }
