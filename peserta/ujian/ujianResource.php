@@ -3,8 +3,11 @@ session_start();
 include '../../inc/config.php';
 include '../../admin/model/object.php';
 
-$status_kategoris = unserialize($_SESSION['kategori']);
-$soals = unserialize($_SESSION['soal']);
+//$status_kategoris = unserialize($_SESSION['kategori']);
+//$soals = unserialize($_SESSION['soal']);
+
+$fileTempKat = '../temp/temp_kategori_'.$_SESSION['no_peserta'];
+$fileTemp = '../temp/temp_soal_'.$_SESSION['no_peserta'];
 
 if(isset ($_POST['json'])){
     $json = $_POST['json'];
@@ -16,13 +19,33 @@ if(isset ($_POST['json'])){
         echo json_encode(new Result('0',"Parameter tidak lengkap"));
         exit();
     }
+    
+    //load file temporary to get soals
+    $dom = new DOMDocument("1.0");
+    $dom->load($fileTemp);
+    $xpath = new DOMXPath($dom);
+    $result = $xpath->query("//soal[@id_kategori = \"$id_kategori\"]");
+    $soals = array(); $i = 0;
+    foreach ($result as $so) {
+        $jawabans = array(); $idx_jwb = 0;
+        $dom_jawabans = $so->getElementsByTagName('jawaban');
+        foreach ($dom_jawabans as $jawab) {
+            $jawaban = new Jawaban($jawab->getAttribute('id_jawaban'), $jawab->getAttribute('id_soal'), $jawab->getAttribute('jawaban'), $jawab->getAttribute('benar'));
+            $jawabans[$idx_jwb] = $jawaban;
+            $idx_jwb++;
+        }
+        $soal = new Soal($so->getAttribute('id_soal'), $so->getAttribute('id_kategori'), $so->getAttribute('isi_soal'), $jawabans);
+        $soals[$i] = $soal;
+        $i++;
+    }
+    //end load file temporary to get soals
+    
     $jumlah_soal = count($ujian);
     $jawaban_benar = 0;
     for($i=0;$i<$jumlah_soal;$i++){
         $id_soal = $ujian[$i]->{'id_soal'};
         $id_jawaban = $ujian[$i]->{'id_jawaban'};
         foreach ($soals as $soal) {
-//            echo $status_kategoris[0]->get_id_kategori().',';
             if($soal->id_soal == $id_soal){
                 $jawabans = $soal->jawabans;
                 foreach ($jawabans as $jawaban) {
@@ -37,56 +60,86 @@ if(isset ($_POST['json'])){
             }
         }
     }
+    //simpan nilai ke dalam temporary
     $nilai = (100/$jumlah_soal) * $jawaban_benar;
-    $jum_kat = count($status_kategoris);
     $sudah_semua = true;
-    for($i=0;$i<$jum_kat;$i++) {
-        if($status_kategoris[$i]->id_kategori == $id_kategori){
-            $status_kategoris[$i]->set_nilai($nilai);
-            $status_kategoris[$i]->set_sudah(true);
-            break;
-        }
+    $dom = new DOMDocument("1.0");
+    $dom->load($fileTempKat);
+    $xpath = new DOMXPath($dom);
+    $result = $xpath->query("//kategori[@id_kategori = \"$id_kategori\"]")->item(0);
+    $result->setAttribute('nilai', $nilai);
+    $result->setAttribute('sudah', true);
+    $dom->save($fileTempKat);
+    
+    //cek jika semua kategori sudah dikerjakan
+    $kategoris = $dom->getElementsByTagName('kategori');
+    $yangsudah = $xpath->query("//kategori[@sudah = 1]");
+    if($kategoris->length != $yangsudah->length){
+        $sudah_semua = false;
     }
-    for($i=0;$i<$jum_kat;$i++) {
-        if(!$status_kategoris[$i]->get_sudah()){
-            $sudah_semua = false;
-            break;
-        }
-    }
+    
+    //jika sudah dikerjakan semua
     if($sudah_semua){
         $jumlah_nilai = 0;
-        for($i=0;$i<$jum_kat;$i++) {
-            $jumlah_nilai += $status_kategoris[$i]->get_nilai();
+        foreach ($kategoris as $kategori) {
+            $jumlah_nilai += $kategori->getAttribute('nilai');
         }
-        $nilai_akhir = $jumlah_nilai/$jum_kat;
+        $nilai_akhir = $jumlah_nilai/$kategoris->length;
         $query = "update peserta set nilai=$nilai_akhir where no_peserta='$no_peserta'";
         $result = mysql_query($query);
         if(!$result){
             echo json_encode(new Result('0',"Gagal query 1")); exit();
         }
-//        $query = "select pj.*,g.id_grade,g.batas_grade from pilihan_jurusan pj,grade g
-//where pj.id_jurusan=g.id_jurusan and no_peserta='$no_peserta'";
-//        $result = mysql_query($query);
-//        if($result === FALSE){
-//            echo json_encode(new Result('0',mysql_error())); exit();
-//        }
-//        while ($row = mysql_fetch_array($result)) {
-//            $no_pes = $row['no_peserta'];
-//            $id_jurusan = $row['id_jurusan'];
-//            $batas_grade = $row['batas_grade'];
-//            if($nilai_akhir>=$batas_grade){
-//                $query = "update pilihan_jurusan set lulus=1 where no_peserta='$no_pes' and id_jurusan=$id_jurusan;";
-//                $resul = mysql_query($query);
-//                if(!$resul){
-//                    echo json_encode(new Result('0',"Gagal query 2")); exit();
-//                }
-//            }
-//        }
+        //load status kategori dari file temporary untuk disimpan ke session
+        $dom = new DOMDocument("1.0");
+        $dom->load($fileTempKat);
+        $kategoris = $dom->getElementsByTagName('kategori');
+        $status_kategoris = array(); $i = 0;
+        foreach ($kategoris as $kat) {
+            $status_kategori = new StatusKategori($kat->getAttribute('id_kategori'), $kat->getAttribute('nama_kategori'), $kat->getAttribute('waktu'), $kat->getAttribute('jumlah_soal'));
+            $status_kategori->set_sudah($kat->getAttribute('sudah'));
+            $status_kategori->set_nilai($kat->getAttribute('nilai'));
+            $status_kategoris[$i] = $status_kategori;
+            $i++;
+        }
+        $_SESSION['kategori'] = serialize($status_kategoris);
+        
+        //hapus file temporary
+        unlink($fileTempKat);
+        unlink($fileTemp);
     }
-    $_SESSION['kategori'] = serialize($status_kategoris);
-    unset ($_SESSION['soal']);
+    
+//    $nilai = (100/$jumlah_soal) * $jawaban_benar;
+//    $jum_kat = count($status_kategoris);
+//    $sudah_semua = true;
+//    for($i=0;$i<$jum_kat;$i++) {
+//        if($status_kategoris[$i]->id_kategori == $id_kategori){
+//            $status_kategoris[$i]->set_nilai($nilai);
+//            $status_kategoris[$i]->set_sudah(true);
+//            break;
+//        }
+//    }
+//    for($i=0;$i<$jum_kat;$i++) {
+//        if(!$status_kategoris[$i]->get_sudah()){
+//            $sudah_semua = false;
+//            break;
+//        }
+//    }
+//    if($sudah_semua){
+//        $jumlah_nilai = 0;
+//        for($i=0;$i<$jum_kat;$i++) {
+//            $jumlah_nilai += $status_kategoris[$i]->get_nilai();
+//        }
+//        $nilai_akhir = $jumlah_nilai/$jum_kat;
+//        $query = "update peserta set nilai=$nilai_akhir where no_peserta='$no_peserta'";
+//        $result = mysql_query($query);
+//        if(!$result){
+//            echo json_encode(new Result('0',"Gagal query 1")); exit();
+//        }
+//    }
+//    $_SESSION['kategori'] = serialize($status_kategoris);
+//    unset ($_SESSION['soal']);
     unset ($_SESSION['mulai']);
-//    echo 'Nilai '.$nilai;
     echo json_encode(new Result('1',"Sukses"));
 } else {
     echo json_encode(new Result('0',"Parameter tidak lengkap"));

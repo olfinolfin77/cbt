@@ -124,6 +124,45 @@ include 'header.php';
             default:
                 break;
         }
+//        $no_peserta = $("#temp_no_peserta").val();
+//        $id_kategori = $("#temp_id_kategori").val();
+        $id_soal = id.substr(0, id.indexOf('jwb'));
+        $id_jawaban = $(obj).find('input').prop('id').substr(3);
+        var data = {
+            no_peserta:$("#temp_no_peserta").val(),
+            id_kategori:$("#temp_id_kategori").val(),
+            id_soal:$id_soal,
+            id_jawaban:$id_jawaban
+        }
+        $.ajax({
+            url: 'submitJawaban.php',
+            data: {
+                json:jQuery.toJSON(data)
+            },
+            cache: false,
+            type: 'POST',
+            statusCode: {
+                404: function() {
+                    alert("page not found");
+                }
+            },
+            success: function(data, status, xhr){
+//                alert(data)
+                var result = $.parseJSON(data);
+                if(result==null){
+                    alert("Problem dengan server");
+                }else
+                    if(result.status=='1') {
+//                        location.reload();
+                    } else {
+                        alert("Problem dengan server");
+                    }
+            },
+            error: function(xhr, status, errorMsg){
+                alert(errorMsg);
+            }
+        });
+//        alert($no_peserta+" "+$id_kategori+" "+$id_soal+" "+$id_jawaban);
         $(obj).find('input').prop('checked',true);
     }
 </script>
@@ -215,7 +254,7 @@ and p.no_peserta='{$_SESSION['no_peserta']}'";
                         foreach ($jawabans as $jawaban) {
                         ?>
                         <li id="<?php echo $jawaban->get_id_soal().'jwb'.$id_jwb;?>" onclick="jwbClick(this);">
-                            <input id="<?php echo 'jwb'.$jawaban->id_jawaban;?>" type="checkbox" value="Algo"/><span><?php echo $jawaban->jawaban;?></span>
+                            <input id="<?php echo 'jwb'.$jawaban->id_jawaban;?>" type="checkbox" value="Algo" <?php echo (strpos($jawaban->id_jawaban, '.') === 0)?'checked':''; ?>/><span><?php echo $jawaban->jawaban;?></span>
                         </li>
 <!--                        <li id="chk2" onclick="jwbClick(this);"><input type="checkbox" value="Algo2"/><span>Algo2</span></li>
                         <li id="chk3" onclick="jwbClick(this);"><input type="checkbox" value="Algo3"/><span>Algo3</span></li>
