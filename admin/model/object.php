@@ -108,10 +108,18 @@ class User {
 class Jurusan {
     var $id_jurusan;
     var $nama_jurusan;
+    var $daya_tampung;
 
     function __construct($id_jurusan, $nama_jurusan) {
         $this->id_jurusan = $id_jurusan;
         $this->nama_jurusan = $nama_jurusan;
+        $this->daya_tampung = 0;
+    }
+    
+    public static function jurusan($id_jurusan, $nama_jurusan, $daya_tampung){
+        $jurusan = new Jurusan($id_jurusan, $nama_jurusan);
+        $jurusan->set_daya_tampung($daya_tampung);
+        return $jurusan;
     }
 
     public function get_id_jurusan() {
@@ -128,6 +136,14 @@ class Jurusan {
     
     public function set_nama_jurusan($nama_jurusan) {
         $this->nama_jurusan = $nama_jurusan;
+    }
+    
+    public function get_daya_tampung(){
+        return $this->daya_tampung;
+    }
+    
+    public function set_daya_tampung($daya_tampung){
+        $this->daya_tampung = $daya_tampung;
     }
 }
 

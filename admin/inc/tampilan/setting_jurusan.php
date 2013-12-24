@@ -34,6 +34,7 @@
                 tr.setAttribute("id", "rowJur"+jurusans[i].id_jurusan);
                 var td = "<td>"+jurusans[i].id_jurusan+"</td>"+
                 "<td id='nama_jur"+jurusans[i].id_jurusan+"'>"+jurusans[i].nama_jurusan+"</td>"+
+                "<td id='tampung_jur"+jurusans[i].id_jurusan+"'>"+jurusans[i].daya_tampung+"</td>"+
                 "<td align='center'>"+
                     "<a href='' class='btn btn-warning'"+
                        "onclick='return showInputJurusan(\"ubah\","+jurusans[i].id_jurusan+",\""+jurusans[i].nama_jurusan+"\");'>"+
@@ -53,7 +54,7 @@
             resizable: false,
             position: 'center',
             modal: true,
-            width: 540,
+            width: 640,
             height: "auto",
             hide: 'fold',
             show: 'bounce'
@@ -81,11 +82,13 @@
             var id_jurusan = arguments[1];
 //            var nama_jurusan = arguments[2];
             var nama_jurusan = $("#nama_jur"+id_jurusan).html();
+            var daya_tampung = $("#tampung_jur"+id_jurusan).html();
         }
         if(isUbah){
             $("#frm-input-jurusan").addClass("ubah");
             $("#temp_id_jurusan_jur").val(id_jurusan);
             $("#nama_jurusan_jur").val(nama_jurusan);
+            $("#daya_tampung_jur").val(daya_tampung);
         } else {
             $("#form-input-jurusan").trigger("reset");
             $("#frm-input-jurusan").removeClass("ubah");
@@ -109,9 +112,11 @@
         }
         var id_jurusan = (isUbah)?$("#temp_id_jurusan_jur").val():"";
         var nama_jurusan = $("#nama_jurusan_jur").val();
+        var daya_tampung = $("#daya_tampung_jur").val();
         var data = {
             id_jurusan:id_jurusan,
-            nama_jurusan:nama_jurusan
+            nama_jurusan:nama_jurusan,
+            daya_tampung:daya_tampung
         };
         $.ajax({
             url: BASE_URL+'/services/crudResource.php',
@@ -138,6 +143,7 @@
                     $("#frm-input-jurusan").dialog('close');
                     if(isUbah){
                         $("#nama_jur"+id_jurusan).html(nama_jurusan);
+                        $("#tampung_jur"+id_jurusan).html(daya_tampung);
                     }else {
                         var fullMessage = json.fullMessage;
                         var id = fullMessage.substring(6, fullMessage.length);
@@ -145,6 +151,7 @@
                         tr.setAttribute("id", "rowJur"+id);
                         var td = "<td>"+id+"</td>"+
                         "<td id='nama_jur"+id+"'>"+nama_jurusan+"</td>"+
+                        "<td id='tampung_jur"+id+"'>"+daya_tampung+"</td>"+
                         "<td align='center'>"+
                         "<a href='' class='btn btn-warning'"+
                         "onclick='return showInputJurusan(\"ubah\","+id+",\""+nama_jurusan+"\");'>"+
@@ -229,6 +236,7 @@
             <tr>
                 <th>ID Jurusan</th>
                 <th>Nama Jurusan</th>
+                <th>Daya Tampung</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -263,6 +271,10 @@
             <tr>
                 <td>Nama Jurusan</td>
                 <td align="right"><input name="nama_jurusan_jur" id="nama_jurusan_jur" class="validate[required]" type="text"/></td>
+            </tr>
+            <tr>
+                <td>Daya Tampung</td>
+                <td align="right"><input name="daya_tampung_jur" id="daya_tampung_jur" class="validate[required]" type="text"/></td>
             </tr>
         </table>
         <button type="submit" class="btn btn-primary">

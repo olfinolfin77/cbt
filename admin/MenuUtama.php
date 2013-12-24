@@ -35,6 +35,9 @@ if(!isset($_SESSION['username'])){
          case 'soal':
              include 'soal/index.php';
              break;
+         case 'laporan':
+             include './laporan.php';
+             break;
          default:
              break;
      }

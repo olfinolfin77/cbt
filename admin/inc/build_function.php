@@ -321,7 +321,9 @@ function get_jurusan($json) {
         while ($row = mysql_fetch_array($result)) {
             $id_jurusan = $row['id_jurusan'];
             $nama_jurusan = $row['nama_jurusan'];
-            $jurusan = new Jurusan($id_jurusan, $nama_jurusan);
+            $daya_tampung = $row['daya_tampung'];
+//            $jurusan = new Jurusan($id_jurusan, $nama_jurusan);
+            $jurusan = Jurusan::jurusan($id_jurusan, $nama_jurusan, $daya_tampung);
             $jurusans[$i] = $jurusan;
             $i++;
         }
@@ -423,13 +425,14 @@ function simpan_grade_jurusan($json) {
 function tambah_jurusan($json) {
     $obj = json_decode(stripslashes($json));
     $nama_jurusan = $obj->{'nama_jurusan'};
-    if($nama_jurusan==null){
+    $daya_tampung = $obj->{'daya_tampung'};
+    if($nama_jurusan==null || $daya_tampung==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "INSERT into jurusan(nama_jurusan) values(?)";
+    $query = "INSERT into jurusan(nama_jurusan,daya_tampung) values(?,?)";
     $link = mysqli_connect(server,username,password,database);
     if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'s',$nama_jurusan);
+        mysqli_stmt_bind_param($stmt,'si',$nama_jurusan,$daya_tampung);
         if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
     } else {
         return json_encode(new Result('0','gagal'));
@@ -451,13 +454,14 @@ function ubah_jurusan($json) {
     $obj = json_decode(stripslashes($json));
     $id_jurusan = $obj->{'id_jurusan'};
     $nama_jurusan = $obj->{'nama_jurusan'};
-    if($id_jurusan==null || $nama_jurusan==null){
+    $daya_tampung = $obj->{'daya_tampung'};
+    if($id_jurusan==null || $nama_jurusan==null || $daya_tampung==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "UPDATE jurusan SET nama_jurusan=? WHERE id_jurusan=?";
+    $query = "UPDATE jurusan SET nama_jurusan=? , daya_tampung=? WHERE id_jurusan=?";
     $link = mysqli_connect(server,username,password,database);
     if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'si',$nama_jurusan,$id_jurusan);
+        mysqli_stmt_bind_param($stmt,'sii',$nama_jurusan,$daya_tampung,$id_jurusan);
         if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
     } else {
         return json_encode(new Result('0','gagal'));

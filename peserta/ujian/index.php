@@ -178,6 +178,8 @@ include 'header.php';
                     </div>
                 </div><!-- /navbar-inner -->
             </div>
+            <span>Nomor Peserta : <?php echo $_SESSION['no_peserta'];?></span><br/>
+            <span>Nama Peserta : <?php echo $_SESSION['nama'];?></span><br/>
             <?php
             $jumlah_nilai = 0;
             for($i=0;$i<$jum;$i++){
@@ -186,24 +188,25 @@ include 'header.php';
             <span>Kategori <?php echo $status_kategoris[$i]->get_nama_kategori().' : '.$status_kategoris[$i]->get_nilai();?></span>
             <br/>
             <?php } ?>
-            <span>Nilai Akhir : <?php echo $jumlah_nilai/$jum;?></span><br/>
+            <span>Nilai Akhir : <?php echo $jumlah_nilai/$jum;?></span><br/><br/>
+            <span>Untuk Melihat Hasil kelulusan bisa menghubungi admin dengan menyertakan nomer pendaftaran.</span>
             <?php
-            $query = "select pj.no_peserta,pj.id_jurusan,
-(CASE WHEN nilai<g.batas_grade
-THEN 0 ELSE 1 END) as lulus,j.nama_jurusan
-from peserta p,pilihan_jurusan pj,jurusan j,grade g
-where p.no_peserta=pj.no_peserta and pj.id_jurusan=j.id_jurusan and j.id_jurusan=g.id_jurusan
-and p.no_peserta='{$_SESSION['no_peserta']}'";
-            $result = mysql_query($query);
-            while ($row = mysql_fetch_array($result)) {
-                $lulus =  $row['lulus'];
-                $nama_jurusan = $row['nama_jurusan'];
-                if($lulus){
-                    echo '<span>Anda diterima di jurusan '.$nama_jurusan.'</span><br/>';
-                } else {
-                    echo '<span>Anda tidak diterima di jurusan '.$nama_jurusan.'</span><br/>';
-                }
-            }
+//            $query = "select pj.no_peserta,pj.id_jurusan,
+//(CASE WHEN nilai<g.batas_grade
+//THEN 0 ELSE 1 END) as lulus,j.nama_jurusan
+//from peserta p,pilihan_jurusan pj,jurusan j,grade g
+//where p.no_peserta=pj.no_peserta and pj.id_jurusan=j.id_jurusan and j.id_jurusan=g.id_jurusan
+//and p.no_peserta='{$_SESSION['no_peserta']}'";
+//            $result = mysql_query($query);
+//            while ($row = mysql_fetch_array($result)) {
+//                $lulus =  $row['lulus'];
+//                $nama_jurusan = $row['nama_jurusan'];
+//                if($lulus){
+//                    echo '<span>Anda diterima di jurusan '.$nama_jurusan.'</span><br/>';
+//                } else {
+//                    echo '<span>Anda tidak diterima di jurusan '.$nama_jurusan.'</span><br/>';
+//                }
+//            }
             ?>
             <?php } else {
             if(isset ($_SESSION['mulai'])){

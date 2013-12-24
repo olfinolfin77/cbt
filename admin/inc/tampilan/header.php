@@ -31,11 +31,19 @@
                       </a>
                       <ul class="dropdown-menu">
                           <li><a href="#" onclick="return showJurusan('<?php echo getUrlForAjax();?>');">Setting Jurusan</a></li>
-                          <li><a href="#" onclick="return showGrade();">Setting Grade Lulus</a></li>
+                          <!--<li><a href="#" onclick="return showGrade();">Setting Grade Lulus</a></li>-->
                           <li><a href="#" onclick="return showKategori();">Setting Kategori</a></li>
 <!--                          <li><a href="soal/index.php?halaman=1">Setting Soal Text</a></li>
                           <li><a href="soalgambar/index.php?halaman=1">Setting Soal Gambar</a></li>
                           <li><a href="ujian/index.php?halaman=1">Setting Ujian</a></li>-->
+                      </ul>
+                  </li>
+                  <li class="dropdown">
+                      <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                          <i class="icon-folder-open icon-white"></i> Laporan<b class="caret"></b>
+                      </a>
+                      <ul class="dropdown-menu">
+                          <li><a href="?master=laporan" >Siswa Diterima</a></li>
                       </ul>
                   </li>
                   <?php } ?>
@@ -187,5 +195,5 @@
     </center>
 </div>
 <?php include 'inc/tampilan/setting_jurusan.php';?>
-<?php include 'inc/tampilan/setting_grade.php';?>
+<?php //include 'inc/tampilan/setting_grade.php';?>
 <?php include 'inc/tampilan/setting_kategori.php';?>

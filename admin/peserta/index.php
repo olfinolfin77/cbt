@@ -53,7 +53,7 @@
             show: 'bounce'
         });
     }
-    function ubahData(noPeserta,nama,alamat,telepon,keterangan,pilihanJurusan){
+    function ubahData(noPeserta,nama,alamat,telepon,keterangan,pilihanJurusan1,pilihanJurusan2){
         $("#frm-tambah").addClass("ubah");
         $("#temp_no_peserta").val(noPeserta);
         $("#no_peserta").val(noPeserta);
@@ -79,7 +79,7 @@
             success: function(data, status, xhr){
                 var jurusans = $.parseJSON(data);
                 if(jurusans!==null){
-                    fillJurusanFromUbah(jurusans,pilihanJurusan);
+                    fillJurusanFromUbah(jurusans,pilihanJurusan1,pilihanJurusan2);
                 }
             },
             error: function(xhr, status, errorMsg){
@@ -89,7 +89,7 @@
         
         return false;
     }
-    function fillJurusanFromUbah(jurusans,pilihanJurusan){
+    function fillJurusanFromUbah(jurusans,pilihanJurusan1,pilihanJurusan2){
         $("#pil_jurusan,#pil_jurusan2").append($('<option>',{
             value:"",
             text:"---Pilih Jurusan---"
@@ -101,16 +101,21 @@
             }));
         }
 
-        var status = pilihanJurusan.split(',');
-        for(var i=0;i<status.length;i++){
-            var pilJurusan = status[i].split('=');
-            if(i==0)
-            $("#pil_jurusan option:contains('"+pilJurusan[0]+"')").prop('selected',true);
-            else {
-                $("#pil_jurusan2 option:contains('"+pilJurusan[0]+"')").prop('selected',true);
-                break;
-            }
-        }
+//        var status = pilihanJurusan.split(',');
+//        for(var i=0;i<status.length;i++){
+//            var pilJurusan = status[i].split('=');
+//            if(i==0)
+//            $("#pil_jurusan option:contains('"+pilJurusan[0]+"')").prop('selected',true);
+//            else {
+//                $("#pil_jurusan2 option:contains('"+pilJurusan[0]+"')").prop('selected',true);
+//                break;
+//            }
+//        }
+
+        if(pilihanJurusan1!='' && pilihanJurusan1!=null)
+        $("#pil_jurusan option:contains('"+pilihanJurusan1+"')").prop('selected',true);
+        if(pilihanJurusan2!='' && pilihanJurusan2!=null)
+        $("#pil_jurusan2 option:contains('"+pilihanJurusan2+"')").prop('selected',true);
 
         $("#frm-tambah").dialog({
             title: "Ubah Data Peserta",
@@ -364,7 +369,8 @@
                 <th>Telepon</th>
                 <th>Nilai</th>
                 <th>Keterangan</th>
-                <th>Pilihan Jurusan</th>
+                <th>Pilihan Jurusan 1</th>
+                <th>Pilihan Jurusan 2</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -379,46 +385,73 @@ $halaman=1;
 }else{
 $posisi=($halaman-1)* $batas;
 }
-//$query="SELECT *,
+//QUERY LAMA
+//$query="SELECT no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,
+//group_concat(d1.status SEPARATOR ','
+//) AS pilihan_jurusan from
+//(
+//SELECT d0.*,concat(nama_jurusan,'=' COLLATE utf8_unicode_ci,lulus) AS status from
+//(
+//SELECT p.*,
 //(CASE
 //WHEN nilai=-1 THEN 'Belum Ujian'
-//ELSE nilai END) AS fill_nilai FROM
-//peserta ORDER BY nama LIMIT $posisi,$batas";
-$query="SELECT no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,
-group_concat(d1.status SEPARATOR ','
-) AS pilihan_jurusan from
+//ELSE nilai END) AS fill_nilai,(
+//CASE WHEN nilai<g.batas_grade THEN 'Tidak Lulus'
+//ELSE 'Lulus' END
+//) as lulus,j.nama_jurusan FROM
+//peserta p,pilihan_jurusan pl,jurusan j,grade g WHERE
+//p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan AND j.id_jurusan=g.id_jurusan ORDER BY nama
+//) as d0
+//) as d1 group by no_peserta ORDER BY nama LIMIT $posisi,$batas";
+$query="SELECT no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,pilihan_jurusan1,pilihan_jurusan2 from
 (
-SELECT d0.*,concat(nama_jurusan,'=' COLLATE utf8_unicode_ci,lulus) AS status from
+SELECT d0.* from
 (
 SELECT p.*,
 (CASE
 WHEN nilai=-1 THEN 'Belum Ujian'
-ELSE nilai END) AS fill_nilai,(
-CASE WHEN nilai<g.batas_grade THEN 'Tidak Lulus'
-ELSE 'Lulus' END
-) as lulus,j.nama_jurusan FROM
-peserta p,pilihan_jurusan pl,jurusan j,grade g WHERE
-p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan AND j.id_jurusan=g.id_jurusan ORDER BY nama
+ELSE nilai END) AS fill_nilai,j.nama_jurusan,
+(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 0,1)) as pilihan_jurusan1,
+(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 1,1)) as pilihan_jurusan2
+FROM
+peserta p,pilihan_jurusan pl,jurusan j WHERE
+p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan ORDER BY nama
 ) as d0
 ) as d1 group by no_peserta ORDER BY nama LIMIT $posisi,$batas";
 $query_page="SELECT nama FROM peserta";
 if(isset($_POST['nama'])){
 $nama=$_POST['nama'];
-$query="SELECT no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,
-group_concat(d1.status SEPARATOR ','
-) AS pilihan_jurusan from
+//QUERY LAMA
+//$query="SELECT no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,
+//group_concat(d1.status SEPARATOR ','
+//) AS pilihan_jurusan from
+//(
+//SELECT d0.*,concat(nama_jurusan,'=' COLLATE utf8_unicode_ci,lulus) AS status from
+//(
+//SELECT p.*,
+//(CASE
+//WHEN nilai=-1 THEN 'Belum Ujian'
+//ELSE nilai END) AS fill_nilai,(
+//CASE WHEN nilai<g.batas_grade THEN 'Tidak Lulus'
+//ELSE 'Lulus' END
+//) as lulus,j.nama_jurusan FROM
+//peserta p,pilihan_jurusan pl,jurusan j,grade g WHERE
+//p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan AND j.id_jurusan=g.id_jurusan ORDER BY nama
+//) as d0
+//) as d1 WHERE nama LIKE '%$nama%' group by no_peserta";
+$query="SELECT no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,pilihan_jurusan1,pilihan_jurusan2 from
 (
-SELECT d0.*,concat(nama_jurusan,'=' COLLATE utf8_unicode_ci,lulus) AS status from
+SELECT d0.* from
 (
 SELECT p.*,
 (CASE
 WHEN nilai=-1 THEN 'Belum Ujian'
-ELSE nilai END) AS fill_nilai,(
-CASE WHEN nilai<g.batas_grade THEN 'Tidak Lulus'
-ELSE 'Lulus' END
-) as lulus,j.nama_jurusan FROM
-peserta p,pilihan_jurusan pl,jurusan j,grade g WHERE
-p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan AND j.id_jurusan=g.id_jurusan ORDER BY nama
+ELSE nilai END) AS fill_nilai,j.nama_jurusan,
+(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 0,1)) as pilihan_jurusan1,
+(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 1,1)) as pilihan_jurusan2
+FROM
+peserta p,pilihan_jurusan pl,jurusan j WHERE
+p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan ORDER BY nama
 ) as d0
 ) as d1 WHERE nama LIKE '%$nama%' group by no_peserta";
 	$query_page="SELECT nama FROM peserta WHERE nama LIKE '%$nama%'";
@@ -438,10 +471,11 @@ $no+=1;
                 <td><?php echo $rows['telepon']; ?></td>
                 <td><?php echo $rows['fill_nilai']; ?></td>
                 <td><?php echo $rows['keterangan']; ?></td>
-                <td><?php echo $rows['pilihan_jurusan']; ?></td>
+                <td><?php echo $rows['pilihan_jurusan1'] != NULL ? $rows['pilihan_jurusan1'] : '-'; ?></td>
+                <td><?php echo $rows['pilihan_jurusan2'] != NULL ? $rows['pilihan_jurusan2'] : '-'; ?></td>
 		<td align="center">
                     <a href="from_update.php?id_admin=<?php echo $rows['id_admin']; ?>" class="btn btn-warning"
-                       onclick="return ubahData(<?php echo "'{$rows['no_peserta']}','{$rows['nama']}','{$rows['alamat']}','{$rows['telepon']}','{$rows['keterangan']}','{$rows['pilihan_jurusan']}'"; ?>);">
+                       onclick="return ubahData(<?php echo "'{$rows['no_peserta']}','{$rows['nama']}','{$rows['alamat']}','{$rows['telepon']}','{$rows['keterangan']}','{$rows['pilihan_jurusan1']}','{$rows['pilihan_jurusan2']}'"; ?>);">
                         <i class="icon-pencil"></i> Update
                     </a>
                     <a href="delete.php?id_admin=<?php echo $rows['id_admin']; ?>"
