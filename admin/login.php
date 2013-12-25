@@ -22,6 +22,8 @@ if($cek){
 //    while ($row = mysql_fetch_array($query)) {
 //        $_SESSION['id_admin']=$row['id_admin'];
 //    }
+    $row = mysql_fetch_array($query);
+    $_SESSION['id_admin'] = $row['id_admin'];
     $_SESSION['username']=$username;
     $_SESSION['role']=$role;
     header('location:MenuUtama.php');

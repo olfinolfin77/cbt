@@ -141,3 +141,18 @@ a.disabled {
   pointer-events: none;
   cursor: default;
 }
+
+.my_wrapper{
+    margin: 0 auto;
+    width: 1200px;
+}
+
+.left_page{
+    width: 600px;
+    float: left;
+}
+
+.right_page{
+    width: 600px;
+    float: left;
+}

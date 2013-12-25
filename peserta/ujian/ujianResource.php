@@ -45,10 +45,12 @@ if(isset ($_POST['json'])){
     for($i=0;$i<$jumlah_soal;$i++){
         $id_soal = $ujian[$i]->{'id_soal'};
         $id_jawaban = $ujian[$i]->{'id_jawaban'};
+        $id_jawaban = (strpos($id_jawaban, '.') === 0)?substr($id_jawaban, 1):$id_jawaban;
         foreach ($soals as $soal) {
             if($soal->id_soal == $id_soal){
                 $jawabans = $soal->jawabans;
                 foreach ($jawabans as $jawaban) {
+                    $jawaban->id_jawaban = (strpos($jawaban->id_jawaban, '.') === 0)?substr($jawaban->id_jawaban, 1):$jawaban->id_jawaban;
                     if($jawaban->id_jawaban == $id_jawaban){
                         if($jawaban->benar || $jawaban->benar==1){
                             $jawaban_benar++;
@@ -95,12 +97,19 @@ if(isset ($_POST['json'])){
         $dom->load($fileTempKat);
         $kategoris = $dom->getElementsByTagName('kategori');
         $status_kategoris = array(); $i = 0;
+        $query = "insert into nilai_per_kategori values ";
         foreach ($kategoris as $kat) {
             $status_kategori = new StatusKategori($kat->getAttribute('id_kategori'), $kat->getAttribute('nama_kategori'), $kat->getAttribute('waktu'), $kat->getAttribute('jumlah_soal'));
             $status_kategori->set_sudah($kat->getAttribute('sudah'));
             $status_kategori->set_nilai($kat->getAttribute('nilai'));
+            $query .= "('$no_peserta',{$kat->getAttribute('id_kategori')},'{$kat->getAttribute('nilai')}'),";
             $status_kategoris[$i] = $status_kategori;
             $i++;
+        }
+        $query = substr($query, 0, strlen($query)-1);
+        $result = mysql_query($query);
+        if(!$result){
+            echo json_encode(new Result('0',"Gagal query 2")); exit();
         }
         $_SESSION['kategori'] = serialize($status_kategoris);
         

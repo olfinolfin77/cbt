@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Waktu pembuatan: 24. Desember 2013 jam 21:22
+-- Waktu pembuatan: 25. Desember 2013 jam 09:18
 -- Versi Server: 5.0.45
 -- Versi PHP: 5.2.4
 
@@ -182,6 +182,32 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`, `waktu`, `jumlah_soal`) 
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `nilai_per_kategori`
+--
+
+CREATE TABLE `nilai_per_kategori` (
+  `no_peserta` varchar(10) default NULL,
+  `id_kategori` int(11) default NULL,
+  `nilai` int(11) default NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data untuk tabel `nilai_per_kategori`
+--
+
+INSERT INTO `nilai_per_kategori` (`no_peserta`, `id_kategori`, `nilai`) VALUES
+('2009420005', 1, 100),
+('2009420005', 2, 50),
+('2009420002', 1, 0),
+('2009420002', 2, 50),
+('2009420001', 1, 100),
+('2009420001', 2, 80),
+('2009420054', 1, 100),
+('2009420054', 2, 70);
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `peserta`
 --
 
@@ -200,11 +226,12 @@ CREATE TABLE `peserta` (
 --
 
 INSERT INTO `peserta` (`no_peserta`, `nama`, `alamat`, `telepon`, `nilai`, `keterangan`) VALUES
-('2009420001', 'Thory', 'Lamongan', '012398823', 70, ''),
-('2009420002', 'Yosua Willy Handika', 'Sedati', '085746537164', 67, ''),
+('2009420001', 'Thory', 'Lamongan', '012398823', 90, ''),
+('2009420002', 'Yosua Willy Handika', 'Sedati', '085746537164', 25, ''),
 ('2009420003', 'Lukman', 'Kenjeran', '0832631263', 62, ''),
 ('2009420004', 'Agung', 'Lamongan', '082317378123', 78, ''),
-('2009420054', 'Anastasius Billy', 'Sedati', '085723812387', 45, '');
+('2009420005', 'Lukman2', 'Surabaya', '02312387231', 75, ''),
+('2009420054', 'Anastasius Billy', 'Sedati', '085723812387', 85, '');
 
 -- --------------------------------------------------------
 
@@ -228,7 +255,9 @@ INSERT INTO `pilihan_jurusan` (`no_peserta`, `id_jurusan`) VALUES
 ('2009420001', 1),
 ('2009420003', 1),
 ('2009420004', 1),
-('2009420004', 2);
+('2009420004', 2),
+('2009420005', 1),
+('2009420005', 2);
 
 -- --------------------------------------------------------
 

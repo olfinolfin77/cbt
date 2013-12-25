@@ -245,9 +245,18 @@ include 'header.php';
             </div>
             <input type="hidden" id="temp_id_kategori" value="<?php echo $current_kategori->id_kategori;?>"/>
             <input type="hidden" id="temp_no_peserta" value="<?php echo $_SESSION['no_peserta'];?>"/>
+            <div class="my_wrapper">
+            <div class="left_page">
             <ol type="1" class="soal">
                 <?php
-                foreach($newSoals as $soal){
+                $jml_soals = count($newSoals);
+                $jml_kiri = $jml_soals/2;
+                if($jml_soals%2!=0){
+                    $jml_kiri = intval($jml_kiri)+1;
+                }
+                for($i=0;$i<$jml_kiri;$i++){
+                    $soal = $newSoals[$i];
+//                foreach($newSoals as $soal){
                 ?>
                 <li>
                     <div id="soal<?php echo $soal->id_soal;?>" class="isi_soal"><?php echo $soal->isi_soal; ?></div>
@@ -267,6 +276,30 @@ include 'header.php';
                 </li>
                 <?php } ?>
             </ol>
+            </div>
+            <div class="right_page">
+                <ol type="1" class="soal" start="<?=$jml_kiri+1?>">
+                    <?php for($i=$jml_kiri;$i<$jml_soals;$i++){
+                        $soal = $newSoals[$i];
+                    ?>
+                    <li>
+                    <div id="soal<?php echo $soal->id_soal;?>" class="isi_soal"><?php echo $soal->isi_soal; ?></div>
+                    <ul id="<?php echo 'jwb_soal'.$soal->id_soal;?>" class="jawaban" >
+                        <?php
+                        $jawabans = $soal->jawabans; $id_jwb = 1;
+                        foreach ($jawabans as $jawaban) {
+                        ?>
+                        <li id="<?php echo $jawaban->get_id_soal().'jwb'.$id_jwb;?>" onclick="jwbClick(this);">
+                            <input id="<?php echo 'jwb'.$jawaban->id_jawaban;?>" type="checkbox" value="Algo" <?php echo (strpos($jawaban->id_jawaban, '.') === 0)?'checked':''; ?>/><span><?php echo $jawaban->jawaban;?></span>
+                        </li>
+                        <?php $id_jwb++; } ?>
+                    </ul>
+                    </li>
+                    <?php } ?>
+                </ol>
+            </div>
+            </div>
+            <div style="clear: both;"></div>
             <div class="btn-group pull-right" style="bottom: 20px; right: -8px;">
                 <button class="btn btn-primary" onclick="return submit_ujian();">
                     <i class="icon-user icon-white"></i> Next
