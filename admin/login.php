@@ -13,16 +13,19 @@ if($username==null || $password==null || $role==null || $username=='' || $passwo
     exit();
 }
 
-$query=mysql_query("select * from admin where username='$username' and password='$password' and role= '$role' ");
+$query=pg_query("select * from admin where username='$username' and password='$password' and role= '$role' ");
+//$query=mysql_query("select * from admin where username='$username' and password='$password' and role= '$role' ");
 //$query=mysql_query("select * from admin where username='$username' and password='$password' and role= 'Admin IT' ");
 //$query2=mysql_query("select * from admin where username='$username' and password='$password' and role= 'Operator' ");
-$cek=mysql_num_rows($query);
+$cek = pg_num_rows($query);
+//$cek=mysql_num_rows($query);
 //$cek2=  mysql_num_rows($query2);
 if($cek){
 //    while ($row = mysql_fetch_array($query)) {
 //        $_SESSION['id_admin']=$row['id_admin'];
 //    }
-    $row = mysql_fetch_array($query);
+//    $row = mysql_fetch_array($query);
+    $row = pg_fetch_array($query);
     $_SESSION['id_admin'] = $row['id_admin'];
     $_SESSION['username']=$username;
     $_SESSION['role']=$role;

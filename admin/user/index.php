@@ -287,17 +287,20 @@ $halaman=1;
 }else{
 $posisi=($halaman-1)* $batas;
 }
-$query="SELECT id_admin,username,nama,telepon,alamat,role FROM admin ORDER BY username LIMIT $posisi,$batas";
+//$query="SELECT id_admin,username,nama,telepon,alamat,role FROM admin ORDER BY username LIMIT $posisi,$batas";
+$query="SELECT id_admin,username,nama,telepon,alamat,role FROM admin ORDER BY username LIMIT $batas OFFSET $posisi";
 $query_page="SELECT username FROM admin";
 if(isset($_POST['username'])){
 $username=$_POST['username'];
 $query="SELECT id_admin,username,nama,telepon,alamat,role FROM admin WHERE username LIKE '%$username%'";
 	$query_page="SELECT username FROM admin WHERE username LIKE '%$username%'";
 }
-$result=mysql_query($query) or die(mysql_error());
+//$result=mysql_query($query) or die(mysql_error());
+$result=pg_query($query);
 $no=0;
 //proses menampilkan data
-while($rows=mysql_fetch_array($result)){
+//while($rows=mysql_fetch_array($result)){
+while($rows=pg_fetch_array($result)){
 $no+=1;
 ?>
             <tr>
@@ -325,8 +328,10 @@ $no+=1;
         </tbody>
     </table>
 <?php
-$result_page = mysql_query($query_page);
-$jmldata = mysql_num_rows($result_page);
+//$result_page = mysql_query($query_page);
+$result_page = pg_query($query_page);
+//$jmldata = mysql_num_rows($result_page);
+$jmldata = pg_num_rows($result_page);
 $jmlhalaman = ceil($jmldata / $batas);
  
 echo "<div class='pagination'><ul>"; 

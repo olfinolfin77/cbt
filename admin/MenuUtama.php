@@ -1,8 +1,8 @@
 <?php
 session_start();
 include './inc/Constant.php';
-include 'inc/build_function.php';
 require '../inc/config.php';
+include 'inc/build_function.php';
 
 $master = $_GET['master'];
 setTitle("Computer Based-Test");

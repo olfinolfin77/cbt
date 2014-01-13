@@ -410,14 +410,14 @@ SELECT d0.* from
 SELECT p.*,
 (CASE
 WHEN nilai=-1 THEN 'Belum Ujian'
-ELSE nilai END) AS fill_nilai,j.nama_jurusan,
-(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 0,1)) as pilihan_jurusan1,
-(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 1,1)) as pilihan_jurusan2
+ELSE nilai::text END) AS fill_nilai,j.nama_jurusan,
+(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 1)) as pilihan_jurusan1,
+(select nama_jurusan from jurusan where id_jurusan = (select id_jurusan from pilihan_jurusan where no_peserta=p.no_peserta limit 1 OFFSET 1)) as pilihan_jurusan2
 FROM
 peserta p,pilihan_jurusan pl,jurusan j WHERE
 p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan ORDER BY nama
 ) as d0
-) as d1 group by no_peserta ORDER BY nama LIMIT $posisi,$batas";
+) as d1 group by no_peserta,nama,alamat,telepon,nilai,keterangan,fill_nilai,pilihan_jurusan1,pilihan_jurusan2 ORDER BY nama LIMIT $batas OFFSET $posisi";
 $query_page="SELECT nama FROM peserta";
 if(isset($_POST['nama'])){
 $nama=$_POST['nama'];
@@ -456,10 +456,12 @@ p.no_peserta=pl.no_peserta AND pl.id_jurusan=j.id_jurusan ORDER BY nama
 ) as d1 WHERE nama LIKE '%$nama%' group by no_peserta";
 	$query_page="SELECT nama FROM peserta WHERE nama LIKE '%$nama%'";
 }
-$result=mysql_query($query) or die(mysql_error());
+//$result=mysql_query($query) or die(mysql_error());
+$result=pg_query($query);
 $no=0;
 //proses menampilkan data
-while($rows=mysql_fetch_array($result)){
+//while($rows=mysql_fetch_array($result)){
+while($rows=pg_fetch_array($result)){
 $no+=1;
 ?>
             <tr>
@@ -490,8 +492,10 @@ $no+=1;
         </tbody>
     </table>
 <?php
-$result_page = mysql_query($query_page);
-$jmldata = mysql_num_rows($result_page);
+//$result_page = mysql_query($query_page);
+$result_page = pg_query($query_page);
+//$jmldata = mysql_num_rows($result_page);
+$jmldata = pg_num_rows($result_page);
 $jmlhalaman = ceil($jmldata / $batas);
 
 echo "<div class='pagination'><ul>";
