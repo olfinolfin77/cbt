@@ -158,19 +158,24 @@ function tambah_user($json) {
             $role==null || $role==''){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $link = mysqli_connect(server,username,password,database);
+//    $link = mysqli_connect(server,username,password,database);
+    $pg_sql = pg_connect(connection_str);
     $query = "insert into admin(username,password,nama,telepon,alamat,role)
-        values(?,?,?,?,?,?)";
+        values($1,$2,$3,$4,$5,$6)";
+    pg_prepare($pg_sql, 'insert_user', $query);
     $default_password = md5("123456");
+    
+    $result = pg_execute($pg_sql, 'insert_user', array($username,$default_password,$nama,$telepon,$alamat,$role));
+    if(!$result) return json_encode(new Result('0','gagal'));
 
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'ssssss',$username,$default_password,$nama,$telepon,$alamat,$role);
-        mysqli_stmt_execute($stmt);
-    } else {
-        return json_encode(new Result('0','gagal'));
-    }
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'ssssss',$username,$default_password,$nama,$telepon,$alamat,$role);
+//        mysqli_stmt_execute($stmt);
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
 
-    mysqli_stmt_close($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 function ubah_user($json) {
@@ -190,17 +195,22 @@ function ubah_user($json) {
             $role==null || $role==''){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $link = mysqli_connect(server,username,password,database);
-    $query = "UPDATE admin SET username=?,nama=?,telepon=?
-    ,alamat=?,role=? WHERE id_admin=?";
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'sssssi',$username,$nama,$telepon,$alamat,$role,$id_admin);
-        mysqli_stmt_execute($stmt);
-    } else {
-        return json_encode(new Result('0','gagal'));
-    }
+//    $link = mysqli_connect(server,username,password,database);
+    $pg_sql = pg_connect(connection_str);
+    $query = "UPDATE admin SET username=$1,nama=$2,telepon=$3
+    ,alamat=$4,role=$5 WHERE id_admin=$6";
+    pg_prepare($pg_sql, 'ubah_user', $query);
+    
+    $result = pg_execute($pg_sql, 'ubah_user', array($username,$nama,$telepon,$alamat,$role,$id_admin));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'sssssi',$username,$nama,$telepon,$alamat,$role,$id_admin);
+//        mysqli_stmt_execute($stmt);
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
 
-    mysqli_stmt_close($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 
@@ -253,7 +263,7 @@ function hapus_user($json) {
     $obj = json_decode(stripslashes($json));
     $id_admin = $obj->{'id_admin'};
     $query = "DELETE FROM admin WHERE id_admin='$id_admin'";
-    $result = mysql_query($query);
+    $result = pg_query($query);
     if($result){
         return json_encode(new Result('1','sukses'));
     } else return json_encode(new Result('0','gagal query'));
@@ -267,23 +277,28 @@ function ubah_password($json) {
     if($id_admin==null || $password_lama==null || $password_baru==null || $konfirmasi_password==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $result = mysql_query("select password from admin where id_admin=$id_admin");
+    $result = pg_query("select password from admin where id_admin=$id_admin");
     if($result){
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = pg_fetch_array($result)) {
             if(md5($password_lama) != $row['password']) return json_encode(new Result('0','Password Lama Salah'));
         }
     } else return json_encode(new Result('0','gagal query'));
-    $query = "UPDATE admin SET password=? WHERE id_admin=?";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        $password_baru = md5($password_baru);
-        mysqli_stmt_bind_param($stmt,'si',$password_baru,$id_admin);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
-    } else {
-        return json_encode(new Result('0','gagal'));
-    }
+    $pg_sql = pg_connect(connection_str);
+    $query = "UPDATE admin SET password=$1 WHERE id_admin=$2";
+    pg_prepare($pg_sql, 'update_admin', $query);
+    $password_baru = md5($password_baru);
+    $result = pg_execute($pg_sql, 'update_admin', array($password_baru,$id_admin));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        $password_baru = md5($password_baru);
+//        mysqli_stmt_bind_param($stmt,'si',$password_baru,$id_admin);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
 
-    mysqli_stmt_close($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 
@@ -315,10 +330,10 @@ function get_jurusan($json) {
         $batas = $limit->{'batas'};
         $query .= " LIMIT $posisi,$batas";
     }
-    $result = mysql_query($query);
+    $result = pg_query($query);
     if($result){
         $jurusans = array(); $i=0;
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = pg_fetch_array($result)) {
             $id_jurusan = $row['id_jurusan'];
             $nama_jurusan = $row['nama_jurusan'];
             $daya_tampung = $row['daya_tampung'];
@@ -429,23 +444,31 @@ function tambah_jurusan($json) {
     if($nama_jurusan==null || $daya_tampung==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "INSERT into jurusan(nama_jurusan,daya_tampung) values(?,?)";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'si',$nama_jurusan,$daya_tampung);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
-    } else {
-        return json_encode(new Result('0','gagal'));
+    $pg_sql = pg_connect(connection_str);
+    $query = "INSERT into jurusan(nama_jurusan,daya_tampung) values($1,$2) returning id_jurusan";
+    pg_prepare($pg_sql, 'insert_jurusan', $query);
+    $last_id = -1;
+    $result = pg_execute($pg_sql, 'insert_jurusan', array($nama_jurusan,$daya_tampung));
+    while ($row = pg_fetch_array($result)) {
+        $last_id = $row['id_jurusan'];
     }
-    $last_id = mysqli_stmt_insert_id($stmt);
-    mysqli_stmt_close($stmt);
+    if($last_id == -1) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'si',$nama_jurusan,$daya_tampung);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
+//    $last_id = mysqli_stmt_insert_id($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'.$last_id));
 }
 function hapus_jurusan($json) {
     $obj = json_decode(stripslashes($json));
     $id_jurusan = $obj->{'id_jurusan'};
     $query = "DELETE FROM jurusan WHERE id_jurusan='$id_jurusan'";
-    $result = mysql_query($query);
+    $result = pg_query($query);
     if($result){
         return json_encode(new Result('1','sukses'));
     } else return json_encode(new Result('0','gagal query'));
@@ -458,16 +481,20 @@ function ubah_jurusan($json) {
     if($id_jurusan==null || $nama_jurusan==null || $daya_tampung==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "UPDATE jurusan SET nama_jurusan=? , daya_tampung=? WHERE id_jurusan=?";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'sii',$nama_jurusan,$daya_tampung,$id_jurusan);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
-    } else {
-        return json_encode(new Result('0','gagal'));
-    }
+    $pg_sql = pg_connect(connection_str);
+    $query = "UPDATE jurusan SET nama_jurusan=$1 , daya_tampung=$2 WHERE id_jurusan=$3";
+    pg_prepare($pg_sql, 'update_jurusan', $query);
+    $result = pg_execute($pg_sql, 'update_jurusan', array($nama_jurusan,$daya_tampung,$id_jurusan));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'sii',$nama_jurusan,$daya_tampung,$id_jurusan);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal'));
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
 
-    mysqli_stmt_close($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 
@@ -499,10 +526,10 @@ function get_kategori($json) {
         $batas = $limit->{'batas'};
         $query .= " LIMIT $posisi,$batas";
     }
-    $result = mysql_query($query);
+    $result = pg_query($query);
     if($result){
         $kategoris = array(); $i=0;
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = pg_fetch_array($result)) {
             $id_kategori = $row['id_kategori'];
             $nama_kategori = $row['nama_kategori'];
             $waktu = $row['waktu'];
@@ -523,23 +550,31 @@ function tambah_kategori($json) {
     if($nama_kategori==null || $waktu==null || $jumlah_soal==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "INSERT into kategori(nama_kategori,waktu,jumlah_soal) values(?,?,?)";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'sii',$nama_kategori,$waktu,$jumlah_soal);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
-    } else {
-        return json_encode(new Result('0','gagal'));
+    $pg_sql = pg_connect(connection_str);
+    $query = "INSERT into kategori(nama_kategori,waktu,jumlah_soal) values($1,$2,$3) returning id_kategori";
+    pg_prepare($pg_sql, 'insert_kategori', $query);
+    $result = pg_execute($pg_sql, 'insert_kategori', array($nama_kategori,$waktu,$jumlah_soal));
+    $last_id = -1;
+    while ($row = pg_fetch_array($result)) {
+        $last_id = $row['id_kategori'];
     }
-    $last_id = mysqli_stmt_insert_id($stmt);
-    mysqli_stmt_close($stmt);
+    if($last_id == -1) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'sii',$nama_kategori,$waktu,$jumlah_soal);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
+//    $last_id = mysqli_stmt_insert_id($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'.$last_id));
 }
 function hapus_kategori($json) {
     $obj = json_decode(stripslashes($json));
     $id_kategori = $obj->{'id_kategori'};
     $query = "DELETE FROM kategori WHERE id_kategori=$id_kategori";
-    $result = mysql_query($query);
+    $result = pg_query($query);
     if($result){
         return json_encode(new Result('1','sukses'));
     } else return json_encode(new Result('0','gagal query'));
@@ -553,16 +588,20 @@ function ubah_kategori($json) {
     if($id_kategori==null || $nama_kategori==null || $waktu==null || $jumlah_soal==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "UPDATE kategori SET nama_kategori=?,waktu=?,jumlah_soal=? WHERE id_kategori=?";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'siii',$nama_kategori,$waktu,$jumlah_soal,$id_kategori);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
-    } else {
-        return json_encode(new Result('0','gagal'));
-    }
+    $pg_sql = pg_connect(connection_str);
+    $query = "UPDATE kategori SET nama_kategori=$1,waktu=$2,jumlah_soal=$3 WHERE id_kategori=$4";
+    pg_prepare($pg_sql, 'update_kategori', $query);
+    $result = pg_execute($pg_sql, 'update_kategori', array($nama_kategori,$waktu,$jumlah_soal,$id_kategori));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'siii',$nama_kategori,$waktu,$jumlah_soal,$id_kategori);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
 
-    mysqli_stmt_close($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 
@@ -579,25 +618,34 @@ function tambah_peserta($json) {
         return json_encode(new Result('0','Json tidak lengkap'));
     }
     $nilai = '-1'; //-1 = Belum Ujian
-    $query = "INSERT into peserta(no_peserta,nama,alamat,telepon,nilai,keterangan) values(?,?,?,?,?,?)";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'ssssis',$no_peserta,$nama,$alamat,$telepon,$nilai,$keterangan);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
-    } else {
-        return json_encode(new Result('0','gagal'));
-    }
+    $query = "INSERT into peserta(no_peserta,nama,alamat,telepon,nilai,keterangan) values($1,$2,$3,$4,$5,$6)";
+    $pg_sql = pg_connect(connection_str);
+    pg_prepare($pg_sql, 'insert_peserta', $query);
+    $result = pg_execute($pg_sql, 'insert_peserta', array($no_peserta,$nama,$alamat,$telepon,$nilai,$keterangan));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'ssssis',$no_peserta,$nama,$alamat,$telepon,$nilai,$keterangan);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
+//    } else {
+//        return json_encode(new Result('0','gagal'));
+//    }
 //    $query = "INSERT into pilihan_jurusan(no_peserta,id_jurusan,lulus) values(?,?,?)";
-    $query = "INSERT into pilihan_jurusan(no_peserta,id_jurusan) values(?,?)";
+    $query = "INSERT into pilihan_jurusan(no_peserta,id_jurusan) values($1,$2)";
     $total_jurusan = count($pilihan_jurusan); $lulus = '0';
-    if ($stmt = mysqli_prepare($link, $query)) {
-        for($i=0;$i<$total_jurusan;$i++){
-//            mysqli_stmt_bind_param($stmt,'sii',$no_peserta,$pilihan_jurusan[$i],$lulus);
-            mysqli_stmt_bind_param($stmt,'si',$no_peserta,$pilihan_jurusan[$i]);
-            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
-        }
-    } else return json_encode(new Result('0','gagal'));
-    mysqli_stmt_close($stmt);
+    pg_prepare($pg_sql, 'insert_jurusan', $query);
+    for($i=0;$i<$total_jurusan;$i++){
+        $result = pg_execute($pg_sql, 'insert_jurusan', array($no_peserta,$pilihan_jurusan[$i]));
+        if(!$result) return json_encode(new Result('0','gagal'));
+    }
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        for($i=0;$i<$total_jurusan;$i++){
+////            mysqli_stmt_bind_param($stmt,'sii',$no_peserta,$pilihan_jurusan[$i],$lulus);
+//            mysqli_stmt_bind_param($stmt,'si',$no_peserta,$pilihan_jurusan[$i]);
+//            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
+//        }
+//    } else return json_encode(new Result('0','gagal'));
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 function ubah_peserta($json) {
@@ -612,37 +660,49 @@ function ubah_peserta($json) {
     if($no_peserta_old==null || $no_peserta==null || $nama==null || $pilihan_jurusan==null){
         return json_encode(new Result('0','Json tidak lengkap'));
     }
-    $query = "UPDATE peserta SET no_peserta=?,nama=?,alamat=?,telepon=?,keterangan=? WHERE no_peserta=?";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'ssssss',$no_peserta,$nama,$alamat,$telepon,$keterangan,$no_peserta_old);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
-    } else return json_encode(new Result('0','gagal'));
-    $query = "DELETE from pilihan_jurusan WHERE no_peserta=?";
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'s',$no_peserta_old);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
-    } else return json_encode(new Result('0','gagal'));
+    $pg_sql = pg_connect(connection_str);
+    $query = "UPDATE peserta SET no_peserta=$1,nama=$2,alamat=$3,telepon=$4,keterangan=$5 WHERE no_peserta=$6";
+    pg_prepare($pg_sql, 'update_peserta', $query);
+    $result = pg_execute($pg_sql, 'update_peserta', array($no_peserta,$nama,$alamat,$telepon,$keterangan,$no_peserta_old));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'ssssss',$no_peserta,$nama,$alamat,$telepon,$keterangan,$no_peserta_old);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//    } else return json_encode(new Result('0','gagal'));
+    $query = "DELETE from pilihan_jurusan WHERE no_peserta=$1";
+    pg_prepare($pg_sql, 'delete_pilihan', $query);
+    $result = pg_execute($pg_sql, 'delete_pilihan', array($no_peserta_old));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'s',$no_peserta_old);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
+//    } else return json_encode(new Result('0','gagal'));
 
 //    $query = "INSERT into pilihan_jurusan(no_peserta,id_jurusan,lulus) values(?,?,?)";
-    $query = "INSERT into pilihan_jurusan(no_peserta,id_jurusan) values(?,?)";
+    $query = "INSERT into pilihan_jurusan(no_peserta,id_jurusan) values($1,$2)";
     $total_jurusan = count($pilihan_jurusan); $lulus = '0';
-    if ($stmt = mysqli_prepare($link, $query)) {
-        for($i=0;$i<$total_jurusan;$i++){
-//            mysqli_stmt_bind_param($stmt,'sii',$no_peserta,$pilihan_jurusan[$i],$lulus);
-            mysqli_stmt_bind_param($stmt,'si',$no_peserta,$pilihan_jurusan[$i]);
-            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
-        }
-    } else return json_encode(new Result('0','gagal'));
+    pg_prepare($pg_sql, 'insert_jurusan', $query);
+    for($i=0;$i<$total_jurusan;$i++){
+        $result = pg_execute($pg_sql, 'insert_jurusan', array($no_peserta,$pilihan_jurusan[$i]));
+        if(!$result) return json_encode(new Result('0','gagal'));
+    }
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        for($i=0;$i<$total_jurusan;$i++){
+////            mysqli_stmt_bind_param($stmt,'sii',$no_peserta,$pilihan_jurusan[$i],$lulus);
+//            mysqli_stmt_bind_param($stmt,'si',$no_peserta,$pilihan_jurusan[$i]);
+//            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0', mysqli_stmt_error($stmt)));
+//        }
+//    } else return json_encode(new Result('0','gagal'));
 
-    mysqli_stmt_close($stmt);
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 function hapus_peserta($json) {
     $obj = json_decode(stripslashes($json));
     $no_peserta = $obj->{'no_peserta'};
-    $query = "DELETE FROM peserta WHERE no_peserta=$no_peserta";
-    $result = mysql_query($query);
+    $query = "DELETE FROM peserta WHERE no_peserta='$no_peserta'";
+    $result = pg_query($query);
     if($result){
         return json_encode(new Result('1','sukses'));
     } else return json_encode(new Result('0','gagal query'));
@@ -657,22 +717,38 @@ function tambah_soal($json) {
     if($id_kategori==null || $isi_soal==null || $jawaban==null){
         return json_encode(new Result('0','Json tidak lengkap1'));
     }
-    $query = "INSERT into soal(id_kategori,isi_soal) values(?,?)";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'is',$id_kategori,$isi_soal);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
-    } else return json_encode(new Result('0','gagal prepare'));
-    $last_id = mysqli_stmt_insert_id($stmt);
-    $total_jawaban = count($jawaban);
-    $query = "INSERT into jawaban(id_soal,jawaban,benar) values(?,?,?)";
-    if ($stmt = mysqli_prepare($link, $query)) {
-        for($i=0;$i<$total_jawaban;$i++){
-            mysqli_stmt_bind_param($stmt,'isi',$last_id,$jawaban[$i]->{'jawab'},$jawaban[$i]->{'benar'});
-            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+    $pg_sql = pg_connect(connection_str);
+    $query = "INSERT into soal(id_kategori,isi_soal) values($1,$2) returning id_soal;";
+    pg_prepare($pg_sql, 'insert_soal', $query);
+    $result = pg_execute($pg_sql, 'insert_soal', array($id_kategori,$isi_soal));
+    $last_id = -1;
+    if($result){
+        while ($row = pg_fetch_array($result)) {
+            $last_id = $row['id_soal'];
         }
-    } else return json_encode(new Result('0','gagal prepare'));
-    mysqli_stmt_close($stmt);
+    }
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'is',$id_kategori,$isi_soal);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//    } else return json_encode(new Result('0','gagal prepare'));
+//    $last_id = mysqli_stmt_insert_id($stmt);
+    $total_jawaban = count($jawaban);
+    $query = "INSERT into jawaban(id_soal,jawaban,benar) values($1,$2,$3)";
+    pg_prepare($pg_sql, 'insert_jawaban', $query);
+    if($last_id != -1)
+    for($i=0;$i<$total_jawaban;$i++){
+        $result = pg_execute($pg_sql, 'insert_jawaban', array($last_id,$jawaban[$i]->{'jawab'},$jawaban[$i]->{'benar'}));
+        if(!$result) return json_encode(new Result('0','gagal insert jawaban'));
+    }
+    else return json_encode(new Result('0','gagal prepare'));
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        for($i=0;$i<$total_jawaban;$i++){
+//            mysqli_stmt_bind_param($stmt,'isi',$last_id,$jawaban[$i]->{'jawab'},$jawaban[$i]->{'benar'});
+//            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//        }
+//    } else return json_encode(new Result('0','gagal prepare'));
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 function ubah_soal($json) {
@@ -684,21 +760,30 @@ function ubah_soal($json) {
     if($id_soal==null || $id_kategori==null || $isi_soal==null || $jawaban==null){
         return json_encode(new Result('0','Json tidak lengkap1'));
     }
-    $query = "UPDATE soal SET id_kategori=?,isi_soal=? WHERE id_soal=?";
-    $link = mysqli_connect(server,username,password,database);
-    if ($stmt = mysqli_prepare($link, $query)) {
-        mysqli_stmt_bind_param($stmt,'isi',$id_kategori,$isi_soal,$id_soal);
-        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
-    } else return json_encode(new Result('0','gagal prepare'));
+    $pg_sql = pg_connect(connection_str);
+    $query = "UPDATE soal SET id_kategori=$1,isi_soal=$2 WHERE id_soal=$3";
+    pg_prepare($pg_sql, 'update_soal', $query);
+    $result = pg_execute($pg_sql, 'update_soal', array($id_kategori,$isi_soal,$id_soal));
+    if(!$result) return json_encode(new Result('0','gagal'));
+//    $link = mysqli_connect(server,username,password,database);
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        mysqli_stmt_bind_param($stmt,'isi',$id_kategori,$isi_soal,$id_soal);
+//        if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//    } else return json_encode(new Result('0','gagal prepare'));
     $total_jawaban = count($jawaban);
-    $query = "UPDATE jawaban SET id_soal=?,jawaban=?,benar=? WHERE id_soal=? AND id_jawaban=?";
-    if ($stmt = mysqli_prepare($link, $query)) {
-        for($i=0;$i<$total_jawaban;$i++){
-            mysqli_stmt_bind_param($stmt,'isiii',$id_soal,$jawaban[$i]->{'jawab'},$jawaban[$i]->{'benar'},$id_soal,$jawaban[$i]->{'id_jawaban'});
-            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
-        }
-    } else return json_encode(new Result('0','gagal prepare'));
-    mysqli_stmt_close($stmt);
+    $query = "UPDATE jawaban SET id_soal=$1,jawaban=$2,benar=$3 WHERE id_soal=$4 AND id_jawaban=$5";
+    pg_prepare($pg_sql, 'update_jawaban', $query);
+    for($i=0;$i<$total_jawaban;$i++){
+        $result = pg_execute($pg_sql, 'update_jawaban', array($id_soal,$jawaban[$i]->{'jawab'},$jawaban[$i]->{'benar'},$id_soal,$jawaban[$i]->{'id_jawaban'}));
+        if(!$result) return json_encode(new Result('0','gagal execute'));
+    }
+//    if ($stmt = mysqli_prepare($link, $query)) {
+//        for($i=0;$i<$total_jawaban;$i++){
+//            mysqli_stmt_bind_param($stmt,'isiii',$id_soal,$jawaban[$i]->{'jawab'},$jawaban[$i]->{'benar'},$id_soal,$jawaban[$i]->{'id_jawaban'});
+//            if(!mysqli_stmt_execute($stmt)) return json_encode(new Result('0','gagal execute'));
+//        }
+//    } else return json_encode(new Result('0','gagal prepare'));
+//    mysqli_stmt_close($stmt);
     return json_encode(new Result('1','sukses'));
 }
 function hapus_soal($json) {
@@ -707,8 +792,8 @@ function hapus_soal($json) {
     $sukses = false;
     $query = "DELETE FROM soal WHERE id_soal=$id_soal";
     $query2 = "DELETE FROM jawaban WHERE id_soal=$id_soal";
-    $result = mysql_query($query);
-    $result2 = mysql_query($query2);
+    $result = pg_query($query);
+    $result2 = pg_query($query2);
     if($result && $result2){
         return json_encode(new Result('1','sukses'));
     } else return json_encode(new Result('0','gagal query'));
@@ -741,10 +826,10 @@ function get_jawaban_soal($json) {
         $batas = $limit->{'batas'};
         $query .= " LIMIT $posisi,$batas";
     }
-    $result = mysql_query($query);
+    $result = pg_query($query);
     if($result){
         $jawabans = array(); $i=0;
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = pg_fetch_array($result)) {
             $id_jawaban = $row['id_jawaban'];
             $id_soal = $row['id_soal'];
             $jawab = $row['jawaban'];

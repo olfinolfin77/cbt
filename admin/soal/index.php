@@ -593,7 +593,7 @@ $halaman=1;
 $posisi=($halaman-1)* $batas;
 }
 $query="select soal.*,kategori.nama_kategori from soal, kategori
-where soal.id_kategori=kategori.id_kategori ORDER BY id_soal LIMIT $posisi,$batas";
+where soal.id_kategori=kategori.id_kategori ORDER BY id_soal LIMIT $batas OFFSET $posisi";
 $query_page="SELECT isi_soal FROM soal";
 if(isset($_POST['isi_soal'])){
 $isi_soal=$_POST['isi_soal'];
@@ -602,10 +602,12 @@ from soal, kategori where soal.id_kategori=kategori.id_kategori
 AND isi_soal LIKE '%$isi_soal%'";
 	$query_page="SELECT isi_soal FROM soal WHERE isi_soal LIKE '%$isi_soal%'";
 }
-$result=mysql_query($query) or die(mysql_error());
+//$result=mysql_query($query) or die(mysql_error());
+$result=pg_query($query);
 $no=0;
 //proses menampilkan data
-while($rows=mysql_fetch_array($result)){
+//while($rows=mysql_fetch_array($result)){
+while($rows=pg_fetch_array($result)){
 $no+=1;
 ?>
             <tr>
@@ -631,8 +633,10 @@ $no+=1;
         </tbody>
     </table>
 <?php
-$result_page = mysql_query($query_page);
-$jmldata = mysql_num_rows($result_page);
+//$result_page = mysql_query($query_page);
+$result_page = pg_query($query_page);
+//$jmldata = mysql_num_rows($result_page);
+$jmldata = pg_num_rows($result_page);
 $jmlhalaman = ceil($jmldata / $batas);
 
 echo "<div class='pagination'><ul>";

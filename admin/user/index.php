@@ -88,6 +88,7 @@
                 }
             },
             success: function(data, status, xhr){
+//                alert(data);
                 show_sukses();
             },
             error: function(xhr, status, errorMsg){
