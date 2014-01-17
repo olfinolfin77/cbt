@@ -8,10 +8,10 @@ if(isset ($_POST['noPendaftaran'])){
 
 $no_peserta = $_POST['noPendaftaran'];
 $query = "select no_peserta,nama,nilai from peserta where no_peserta='$no_peserta'";
-$result = mysql_query($query);
+$result = pg_query($query);
 $boleh_login = true;
-if(mysql_num_rows($result)){
-    while ($row = mysql_fetch_array($result)) {
+if(pg_num_rows($result)){
+    while ($row = pg_fetch_array($result)) {
         if($row['nilai'] != '-1'){
             $boleh_login = false;
             $error = "Nomor Peserta <b>$no_peserta</b> telah ujian";

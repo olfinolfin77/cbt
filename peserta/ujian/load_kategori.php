@@ -10,13 +10,13 @@ if(isset($_SESSION['kategori'])){
 else
 if(!file_exists($fileTemp)){
     $query = "select * from kategori";
-    $result = mysql_query($query);
+    $result = pg_query($query);
     $status_kategoris = array(); $i = 0;
     
     $dom = new DOMDocument("1.0", "UTF-8");
     $kategoris = $dom->createElement('kategoris');
     
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = pg_fetch_array($result)) {
         $id_kategori = $row['id_kategori'];
         $nama_kategori = $row['nama_kategori'];
         $waktu = $row['waktu'];

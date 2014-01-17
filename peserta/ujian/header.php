@@ -46,11 +46,11 @@
                   <button class="btn btn-primary dropdown-toggle" style="padding-bottom: 11px;" data-toggle="dropdown">
                       <span class="caret"></span>
                   </button>
-                  <?php if($current_kategori==null) { ?>
+                  <?php // if($current_kategori==null) { ?>
                   <ul class="dropdown-menu">
                       <li><a href="logout.php"><i class="icon-off"></i>Log Out</a></li>
                   </ul>
-                  <?php } ?>
+                  <?php // } ?>
               </div>
           </div><!--/.nav-collapse -->
         </div>

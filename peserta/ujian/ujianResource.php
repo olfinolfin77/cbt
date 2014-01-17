@@ -8,12 +8,14 @@ include '../../admin/model/object.php';
 
 $fileTempKat = '../temp/temp_kategori_'.$_SESSION['no_peserta'];
 $fileTemp = '../temp/temp_soal_'.$_SESSION['no_peserta'];
+$fileTempCurrentSoal = '../temp/temp_current_soal_'.$_SESSION['no_peserta'];
 
 if(isset ($_POST['json'])){
     $json = $_POST['json'];
     $obj = json_decode(stripslashes($json));
     $no_peserta = $obj->{'no_peserta'};
     $id_kategori = $obj->{'id_kategori'};
+    $curr_id_soal = $obj->{'id_soal'};
     $ujian = $obj->{'ujian'};
     if($no_peserta==null || $id_kategori==null || $ujian==null){
         echo json_encode(new Result('0',"Parameter tidak lengkap"));
@@ -40,8 +42,42 @@ if(isset ($_POST['json'])){
     }
     //end load file temporary to get soals
     
-    $jumlah_soal = count($ujian);
-    $jawaban_benar = 0;
+    if($curr_id_soal < count($soals)-1){
+        $dom = new DOMDocument("1.0");
+        $dom->load($fileTempCurrentSoal);
+        $dom_soal = $dom->getElementsByTagName('soal');
+        $jwb_benar = $dom_soal->item(0)->getAttribute('jwb_benar');
+        
+        $id_jawaban = $ujian[0]->{'id_jawaban'};
+        foreach ($soals as $soal) {
+            if($soal->id_soal == $curr_id_soal){
+                $jawabans = $soal->jawabans;
+                foreach ($jawabans as $jawaban) {
+                    $jawaban->id_jawaban = (strpos($jawaban->id_jawaban, '.') === 0)?substr($jawaban->id_jawaban, 1):$jawaban->id_jawaban;
+                    if($jawaban->id_jawaban == $id_jawaban){
+                        if($jawaban->benar || $jawaban->benar==1){
+                            $jwb_benar += 1;
+                            $dom_soal->item(0)->setAttribute('jwb_benar', $jwb_benar);
+                        }
+                    }
+                }
+            }
+        }
+        $dom_soal->item(0)->setAttribute('current_id', $curr_id_soal+1);
+        $dom->save($fileTempCurrentSoal);
+        echo json_encode(new Result('1',"Sukses"));
+//        echo json_encode(new Result('0',"Parameter tidak lengkap".$jwb_benar));
+        exit();
+    }
+    
+    $dom = new DOMDocument("1.0");
+    $dom->load($fileTempCurrentSoal);
+    $dom_soal = $dom->getElementsByTagName('soal');
+    $jawaban_benar = $dom_soal->item(0)->getAttribute('jwb_benar');
+    
+//    $jumlah_soal = count($ujian);
+    $jumlah_soal = count($soals);
+//    $jawaban_benar = 0;
     for($i=0;$i<$jumlah_soal;$i++){
         $id_soal = $ujian[$i]->{'id_soal'};
         $id_jawaban = $ujian[$i]->{'id_jawaban'};
@@ -72,6 +108,7 @@ if(isset ($_POST['json'])){
     $result->setAttribute('nilai', $nilai);
     $result->setAttribute('sudah', true);
     $dom->save($fileTempKat);
+    $_SESSION['reset_id_soal'] = true; // untuk penanda supaya mereset current_id_soal
     
     //cek jika semua kategori sudah dikerjakan
     $kategoris = $dom->getElementsByTagName('kategori');
@@ -88,7 +125,7 @@ if(isset ($_POST['json'])){
         }
         $nilai_akhir = $jumlah_nilai/$kategoris->length;
         $query = "update peserta set nilai=$nilai_akhir where no_peserta='$no_peserta'";
-        $result = mysql_query($query);
+        $result = pg_query($query);
         if(!$result){
             echo json_encode(new Result('0',"Gagal query 1")); exit();
         }
@@ -102,12 +139,12 @@ if(isset ($_POST['json'])){
             $status_kategori = new StatusKategori($kat->getAttribute('id_kategori'), $kat->getAttribute('nama_kategori'), $kat->getAttribute('waktu'), $kat->getAttribute('jumlah_soal'));
             $status_kategori->set_sudah($kat->getAttribute('sudah'));
             $status_kategori->set_nilai($kat->getAttribute('nilai'));
-            $query .= "('$no_peserta',{$kat->getAttribute('id_kategori')},'{$kat->getAttribute('nilai')}'),";
+            $query .= "('$no_peserta',{$kat->getAttribute('id_kategori')},{$kat->getAttribute('nilai')}),";
             $status_kategoris[$i] = $status_kategori;
             $i++;
         }
         $query = substr($query, 0, strlen($query)-1);
-        $result = mysql_query($query);
+        $result = pg_query($query);
         if(!$result){
             echo json_encode(new Result('0',"Gagal query 2")); exit();
         }
@@ -116,6 +153,7 @@ if(isset ($_POST['json'])){
         //hapus file temporary
         unlink($fileTempKat);
         unlink($fileTemp);
+        unlink($fileTempCurrentSoal);
     }
     
 //    $nilai = (100/$jumlah_soal) * $jawaban_benar;

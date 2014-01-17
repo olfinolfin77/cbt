@@ -7,6 +7,7 @@ include '../../inc/config.php';
 include 'load_kategori.php';
 include 'my_lcg.php';
 include 'load_soal.php';
+include 'load_current_soal.php';
 
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -65,6 +66,7 @@ include 'header.php';
         var data = {
             no_peserta:$("#temp_no_peserta").val(),
             id_kategori:$("#temp_id_kategori").val(),
+            id_soal:$("#temp_id_soal").val(),
             ujian:dat
         }
         $.ajax({
@@ -80,14 +82,14 @@ include 'header.php';
                 }
             },
             success: function(data, status, xhr){
-//                alert(data)
+//                alert(data);
                 var result = $.parseJSON(data);
                 if(result==null){
                     alert("Problem dengan server");
                 }else
                     if(result.status=='1') location.reload();
                     else {
-                        alert("Problem dengan server");
+                        alert(result.fullMessage);
                     }
             },
             error: function(xhr, status, errorMsg){
@@ -245,18 +247,11 @@ include 'header.php';
             </div>
             <input type="hidden" id="temp_id_kategori" value="<?php echo $current_kategori->id_kategori;?>"/>
             <input type="hidden" id="temp_no_peserta" value="<?php echo $_SESSION['no_peserta'];?>"/>
-            <div class="my_wrapper">
-            <div class="left_page">
-            <ol type="1" class="soal">
+            <input type="hidden" id="temp_id_soal" value="<?php echo $current_id_soal;?>"/>
+            <ol type="1" class="soal" start="<?=$current_id_soal+1?>">
                 <?php
-                $jml_soals = count($newSoals);
-                $jml_kiri = $jml_soals/2;
-                if($jml_soals%2!=0){
-                    $jml_kiri = intval($jml_kiri)+1;
-                }
-                for($i=0;$i<$jml_kiri;$i++){
-                    $soal = $newSoals[$i];
 //                foreach($newSoals as $soal){
+                $soal = $newSoals[$current_id_soal];
                 ?>
                 <li>
                     <div id="soal<?php echo $soal->id_soal;?>" class="isi_soal"><?php echo $soal->isi_soal; ?></div>
@@ -274,32 +269,8 @@ include 'header.php';
                         <?php $id_jwb++; } ?>
                     </ul>
                 </li>
-                <?php } ?>
+                <?php // } ?>
             </ol>
-            </div>
-            <div class="right_page">
-                <ol type="1" class="soal" start="<?=$jml_kiri+1?>">
-                    <?php for($i=$jml_kiri;$i<$jml_soals;$i++){
-                        $soal = $newSoals[$i];
-                    ?>
-                    <li>
-                    <div id="soal<?php echo $soal->id_soal;?>" class="isi_soal"><?php echo $soal->isi_soal; ?></div>
-                    <ul id="<?php echo 'jwb_soal'.$soal->id_soal;?>" class="jawaban" >
-                        <?php
-                        $jawabans = $soal->jawabans; $id_jwb = 1;
-                        foreach ($jawabans as $jawaban) {
-                        ?>
-                        <li id="<?php echo $jawaban->get_id_soal().'jwb'.$id_jwb;?>" onclick="jwbClick(this);">
-                            <input id="<?php echo 'jwb'.$jawaban->id_jawaban;?>" type="checkbox" value="Algo" <?php echo (strpos($jawaban->id_jawaban, '.') === 0)?'checked':''; ?>/><span><?php echo $jawaban->jawaban;?></span>
-                        </li>
-                        <?php $id_jwb++; } ?>
-                    </ul>
-                    </li>
-                    <?php } ?>
-                </ol>
-            </div>
-            </div>
-            <div style="clear: both;"></div>
             <div class="btn-group pull-right" style="bottom: 20px; right: -8px;">
                 <button class="btn btn-primary" onclick="return submit_ujian();">
                     <i class="icon-user icon-white"></i> Next
