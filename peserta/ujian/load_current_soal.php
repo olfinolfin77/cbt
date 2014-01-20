@@ -2,6 +2,7 @@
 
 $fileTempCurrentSoal = '../temp/temp_current_soal_'.$_SESSION['no_peserta'];
 
+if($current_kategori!==null)
 if(!file_exists($fileTempCurrentSoal)){
     $dom = new DOMDocument("1.0", "UTF-8");
     $soal = $dom->createElement('soal');

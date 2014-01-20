@@ -16,6 +16,7 @@ if(isset ($_POST['json'])){
     $no_peserta = $obj->{'no_peserta'};
     $id_kategori = $obj->{'id_kategori'};
     $curr_id_soal = $obj->{'id_soal'};
+    $tmp_id_soal = $obj->{'tmp_id_soal'};
     $ujian = $obj->{'ujian'};
     if($no_peserta==null || $id_kategori==null || $ujian==null){
         echo json_encode(new Result('0',"Parameter tidak lengkap"));
@@ -50,7 +51,7 @@ if(isset ($_POST['json'])){
         
         $id_jawaban = $ujian[0]->{'id_jawaban'};
         foreach ($soals as $soal) {
-            if($soal->id_soal == $curr_id_soal){
+            if($soal->id_soal == $tmp_id_soal){
                 $jawabans = $soal->jawabans;
                 foreach ($jawabans as $jawaban) {
                     $jawaban->id_jawaban = (strpos($jawaban->id_jawaban, '.') === 0)?substr($jawaban->id_jawaban, 1):$jawaban->id_jawaban;
@@ -66,7 +67,7 @@ if(isset ($_POST['json'])){
         $dom_soal->item(0)->setAttribute('current_id', $curr_id_soal+1);
         $dom->save($fileTempCurrentSoal);
         echo json_encode(new Result('1',"Sukses"));
-//        echo json_encode(new Result('0',"Parameter tidak lengkap".$jwb_benar));
+//        echo json_encode(new Result('0',"Parameter tidak lengkap".$jwb_benar.' '.$id_jawaban));
         exit();
     }
     

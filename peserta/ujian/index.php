@@ -67,6 +67,7 @@ include 'header.php';
             no_peserta:$("#temp_no_peserta").val(),
             id_kategori:$("#temp_id_kategori").val(),
             id_soal:$("#temp_id_soal").val(),
+            tmp_id_soal:$("#tmp_id_soal").val(),
             ujian:dat
         }
         $.ajax({
@@ -253,6 +254,7 @@ include 'header.php';
 //                foreach($newSoals as $soal){
                 $soal = $newSoals[$current_id_soal];
                 ?>
+                <input type="hidden" id="tmp_id_soal" value="<?php echo $soal->id_soal;?>"/>
                 <li>
                     <div id="soal<?php echo $soal->id_soal;?>" class="isi_soal"><?php echo $soal->isi_soal; ?></div>
                     <ul id="<?php echo 'jwb_soal'.$soal->id_soal;?>" class="jawaban" >
