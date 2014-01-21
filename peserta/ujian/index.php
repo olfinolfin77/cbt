@@ -8,6 +8,7 @@ include 'load_kategori.php';
 include 'my_lcg.php';
 include 'load_soal.php';
 include 'load_current_soal.php';
+include 'loadTime.php';
 
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -221,7 +222,8 @@ include 'header.php';
             ?>
             <script type="text/javascript">
                 jQuery(document).ready(function () {
-                    var longWayOff = "<?php echo ($current_kategori->get_waktu() * 60) - $telah_berlalu ?>";
+//                    var longWayOff = "<?php // echo ($current_kategori->get_waktu() * 60) - $telah_berlalu ?>";
+                    var longWayOff = "<?php echo $periods; ?>";
 	            if(parseInt(longWayOff) <= 0 ){
                         submit_ujian();
 	            } else {
@@ -233,10 +235,46 @@ include 'header.php';
                         });
                     }
                 });
+                var count = 0;
                 function hampirHabis(periods){
 	            if($.countdown.periodsToSeconds(periods) == 60){
 		        $(this).css({color:"red"});
 		    }
+                    count++;
+                    if(count==5){
+                        count = 0;
+                    var data = {
+                        periods:$.countdown.periodsToSeconds(periods)
+                    }
+                    $.ajax({
+                        url: 'setTime.php',
+                        data: {
+                            json:jQuery.toJSON(data)
+                        },
+                        cache: false,
+                        type: 'POST',
+                        statusCode: {
+                            404: function() {
+                                alert("page not found");
+                            }
+                        },
+                        success: function(data, status, xhr){
+//                            alert(data); return;
+//                            var result = $.parseJSON(data);
+//                            if(result==null){
+//                                alert("Problem dengan server");
+//                            }else
+//                                if(result.status=='1') location.reload();
+//                                else {
+//                                    alert(result.fullMessage);
+//                                }
+                        },
+                        error: function(xhr, status, errorMsg){
+                            alert(errorMsg);
+                        }
+                    });
+                    
+                    }
 	        }
             </script>
             <div class="navbar">

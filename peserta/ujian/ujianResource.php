@@ -9,6 +9,7 @@ include '../../admin/model/object.php';
 $fileTempKat = '../temp/temp_kategori_'.$_SESSION['no_peserta'];
 $fileTemp = '../temp/temp_soal_'.$_SESSION['no_peserta'];
 $fileTempCurrentSoal = '../temp/temp_current_soal_'.$_SESSION['no_peserta'];
+$fileTime = '../temp/temp_time_'.$_SESSION['no_peserta'];
 
 if(isset ($_POST['json'])){
     $json = $_POST['json'];
@@ -155,6 +156,7 @@ if(isset ($_POST['json'])){
         unlink($fileTempKat);
         unlink($fileTemp);
         unlink($fileTempCurrentSoal);
+        unlink($fileTime);
     }
     
 //    $nilai = (100/$jumlah_soal) * $jawaban_benar;
